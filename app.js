@@ -5,15 +5,29 @@ const nunjucks = require('nunjucks'); // 템플릿 엔진으로 Nunjucks 사용
 
 const connect = require('./schemas'); // MongoDB 연결 함수
 
+
+
+
+const indexRouter = require('./routes/index')
+const usersRouter = require('./routes/users')
+const commentsRouter = require('./routes/comments')
+
+
+
 const app = express(); // Express 애플리케이션 생성
 app.set('port', process.env.PORT || 3002); // 포트 설정 -> 환경 변수에서 PORT 가져오거나 포트 기본값을 3002로 설정
 app.set('view engine', 'html'); // 뷰 엔진을 html로 설정
+
+
 
 // Nunjucks 설정
 nunjucks.configure('views', {
   express: app, // Express 애플리케이션 사용 설정
   watch: true, // 템플릿 파일 변경 감지 활성화
 });
+
+
+
 
 connect(); // MongoDB에 연결
 
@@ -22,12 +36,23 @@ app.use(express.static(path.join(__dirname, 'public'))); // 정적 파일 미들
 app.use(express.json()); // JSON 파싱 미들웨어 등록
 app.use(express.urlencoded({ extended: false })); // URL 인코딩 파싱 미들웨어 등록
 
+app.use('/',indexRouter);
+app.use('/users',usersRouter);
+app.use('/comments',commentsRouter);
+
+
+
 // 404 에러 처리 미들웨어
 app.use((req, res, next) => {
     const error = new Error(`요청하신 ${req.method} ${req.url} 라우터가 없습니다.`);
   error.status = 404; // 에러 상태 코드 -> 404로 설정
   next(error); // 다음 미들웨어로 해당 에러 전달
 });
+
+
+
+
+
 
 // 에러 핸들링 미들웨어
 app.use((err, req, res, next) => {
@@ -37,6 +62,9 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500); // 에러 상태 설정 -> 기본값은 500(서버 내부 오류)
   res.render('error'); // 에러 페이지 렌더링 -> 클라이언트에 전달
 });
+
+
+
 
 // 포트 설정에서 서버 실행
 app.listen(app.get('port'), () => {
